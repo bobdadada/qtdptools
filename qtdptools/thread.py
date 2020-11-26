@@ -10,14 +10,16 @@ class NonstopDo(QThread):
     创建持续更新的线程对象，帮助持续更新目标函数
 
     proprety:
-        working-工作状态，True正在运行，False运行结束，类似于标准库中threading.Event
+        working-工作状态，True可运行，False不可运行，类似于标准库中threading.Event
         fun-目标函数，无传递参数
         intervalms-更新的时间间隔，时间间隔必须大于0，否则无法启动
 
     method:
         __init__-初始化线程
         __del__-线程退出
+        stopSafely-线程安全退出
         delSafely-线程安全退出
+        restart-重新运行，主要用于设置工作状态working为True
         run-线程运行
     """
 
@@ -33,6 +35,13 @@ class NonstopDo(QThread):
     def delSafely(self):
         self.working = False
         self.wait()
+    
+    def stopSafely(self):
+        self.delSafely()
+    
+    def restart(self, priority=QThread.InheritPriority):
+        self.working = True
+        self.start(priority)
 
     def run(self):
         while self.working:
@@ -77,7 +86,7 @@ class SuccessiveDo(QThread):
     创建需要运行多步的线程对象
 
     proprety:
-        working-工作状态，True正在运行，False运行结束，类似于标准库中threading.Event
+        working-工作状态，True可运行，False不可运行，类似于标准库中threading.Event
         prefun-前处理函数，无传递参数，运行一次
         fun-目标函数，无传递参数，多步骤运行，返回True或者False
         lastfun-后处理函数，无传递参数，运行一次
@@ -86,7 +95,9 @@ class SuccessiveDo(QThread):
     method:
          __init__-初始化线程
         __del__-线程退出
+        stopSafely-线程安全退出
         delSafely-线程安全退出
+        restart-重新运行，主要用于设置工作状态working为True
         run-线程运行
     """
 
@@ -104,6 +115,13 @@ class SuccessiveDo(QThread):
     def delSafely(self):
         self.working = False
         self.wait()
+
+    def stopSafely(self):
+        self.delSafely()
+
+    def restart(self, priority=QThread.InheritPriority):
+        self.working = True
+        self.start(priority)
 
     def run(self):
         if self.prefun:
