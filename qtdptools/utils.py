@@ -1,4 +1,4 @@
-__all__ = ['CurAbsPathFrom', 'ValueReturnedError', 'validateRets', 'selectFile', 'saveBakeupFile']
+__all__ = ['CurAbsPathFrom', 'ValueReturnedError', 'validateRet', 'selectFile', 'saveBakeupFile']
 
 import os
 import shutil
@@ -24,9 +24,9 @@ class ValueReturnedError(Exception):
     raise ReturnError when a function return values with wrong types
     """
 
-def validateRets(var, errinfo='', types=None, default=None, except_ok=False):
+def validateRet(var, errinfo='', types=None, default=None, except_ok=False):
     """
-    valudate the values returned by a function
+    valudate the value returned by a function
     """
     if types is None:
         if var is None:
