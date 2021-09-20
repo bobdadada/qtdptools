@@ -4,11 +4,9 @@ import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
-from PyQt5.QtWidgets import QTextEdit
 
-from qtpy.QtWidgets import QWidget, QLineEdit, QFrame, QMessageBox, QProgressBar, QPushButton, QLabel, QVBoxLayout, QHBoxLayout
+from qtpy.QtWidgets import QWidget, QLineEdit, QMessageBox, QProgressBar, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtGui import QFont
 
 from qtdptools.widgets.EmailServer import EmailServer
 from qtdptools.show_utils import showQuickMessage
@@ -93,9 +91,9 @@ class Email(QWidget):
             try:
                 message = MIMEText(content, 'plain', 'utf-8')
                 message['From'] = Header(formataddr(
-                    ('Reporter', fromemail)), 'utf-8')   # 发送者
+                    (False, fromemail)), 'utf-8')   # 发送者
                 message['To'] = Header(formataddr(
-                    ('Handler', toemail)), 'utf-8')    # 接收者
+                    (False, toemail)), 'utf-8')    # 接收者
                 message['Subject'] = Header(subject, 'utf-8')
                 self.progressBar.setValue(4)
             except:

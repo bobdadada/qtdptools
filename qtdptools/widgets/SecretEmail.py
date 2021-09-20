@@ -101,9 +101,9 @@ class SecretEmail(QWidget):
             try:
                 message = MIMEText(report, 'plain', 'utf-8')
                 message['From'] = Header(formataddr(
-                    ('Reporter', fromemail)), 'utf-8')   # 发送者
+                    (False, fromemail)), 'utf-8')   # 发送者
                 message['To'] = Header(formataddr(
-                    ('Handler', toemail)), 'utf-8')    # 接收者
+                    (False, toemail)), 'utf-8')    # 接收者
                 message['Subject'] = Header(subject, 'utf-8')
                 self.progressBar.setValue(4)
             except:

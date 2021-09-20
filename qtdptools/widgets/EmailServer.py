@@ -124,14 +124,14 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    widget = EmailServer(email='name@domian', password='testPassword', server='domain', port=25, SSL=True)
+    widget = EmailServer(email='name@domian', password='testPassword', server='domain', port=465, SSL=True)
 
     widget.show()
 
     assert widget.server() == 'domain'
-    assert widget.port() == 25
+    assert widget.port() == 465
+    assert widget.SSL() == True
     assert widget.email() == 'name@domian'
     assert widget.password() == 'testPassword'
-    assert widget.SSL() == True
     
     sys.exit(app.exec())
