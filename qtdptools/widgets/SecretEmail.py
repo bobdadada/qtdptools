@@ -9,20 +9,21 @@ from qtpy.QtWidgets import QWidget, QFrame, QMessageBox, QProgressBar, QPushButt
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QFont
 
-from qtdptools.widget.Email import Email
+from qtdptools.widgets.EmailServer import EmailServer
 from qtdptools.show_utils import showQuickMessage
 
-__all__ = ['EmailReport']
+__all__ = ['SecretEmail']
 
-class EmailReport(QWidget):
+
+class SecretEmail(QWidget):
     emailSentSignal = Signal()
-    
-    def __init__(self, info='', report='', toemail=None, fromemail=None, password=None, server=None, port=25, 
-                        subject='Report', parent=None):
+
+    def __init__(self, info='', report='', subject='Report', toemail=None, fromemail=None, password=None, server=None,
+                 port=25, SSL=False, parent=None):
         super().__init__(parent=parent)
 
         self._info = str(info)  # infomation reported
-        self._report  = str(report)  # report
+        self._report = str(report)  # report
         self._toemail = str(toemail)
         self._subject = str(subject)
 
@@ -38,7 +39,7 @@ class EmailReport(QWidget):
         self.infoText.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.infoText.setFont(QFont('Mcorsoft YaHei', 11, 50))
         self.infoText.setStyleSheet("color:rgb(130,130,130); padding:10px;")
-        self.infoText.setFrameStyle(QFrame.Box|QFrame.Raised)
+        self.infoText.setFrameStyle(QFrame.Box | QFrame.Raised)
 
         # report
         self.reportText = QLabel(self._report)
@@ -46,11 +47,12 @@ class EmailReport(QWidget):
         self.reportText.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.reportText.setFont(QFont('Mcorsoft YaHei', 11, 50))
         self.reportText.setStyleSheet("color:rgb(130,130,130); padding:10px;")
-        self.reportText.setFrameStyle(QFrame.Box|QFrame.Raised)
+        self.reportText.setFrameStyle(QFrame.Box | QFrame.Raised)
         self.reportText.hide()
 
         # 邮件地址
-        self.emailWidget = Email(email=fromemail, password=password, server=server, port=port, parent=self)
+        self.emailWidget = EmailServer(
+            email=fromemail, password=password, server=server, port=port, SSL=SSL, parent=self)
 
         # 邮件发送按钮
         buttonLayout = QHBoxLayout()
@@ -90,6 +92,7 @@ class EmailReport(QWidget):
         toemail = self.toemail()
         server = self.server()
         port = self.port()
+        SSL = self.SSL()
         fromemail = self.fromemail()
         password = self.password()
         self.progressBar.setValue(2)
@@ -97,37 +100,45 @@ class EmailReport(QWidget):
         if successFlag:
             try:
                 message = MIMEText(report, 'plain', 'utf-8')
-                message['From'] = Header(formataddr(('Reporter', fromemail)), 'utf-8')   # 发送者
-                message['To'] =  Header(formataddr(('Handler', toemail)), 'utf-8')    # 接收者
+                message['From'] = Header(formataddr(
+                    ('Reporter', fromemail)), 'utf-8')   # 发送者
+                message['To'] = Header(formataddr(
+                    ('Handler', toemail)), 'utf-8')    # 接收者
                 message['Subject'] = Header(subject, 'utf-8')
                 self.progressBar.setValue(4)
             except:
-                showQuickMessage(title='error', text='请输入合法的邮箱', icon=QMessageBox.Critical, parent=self)
+                showQuickMessage(title='error', text='请输入合法的邮件内容',
+                                 icon=QMessageBox.Critical, parent=self)
                 successFlag = False
 
-        if successFlag:
+        if successFlag:                
             try:
-                with smtplib.SMTP() as smtpObj:
-                    smtpObj.connect(server, port)
-                    smtpObj.login(fromemail, password)
-                    self.progressBar.setValue(6)
-                    smtpObj.sendmail(fromemail, [toemail], message.as_string())
-                    self.progressBar.setValue(10)
-                showQuickMessage(title='info', text="邮件发送完成", icon=QMessageBox.Information, parent=self)
+                if SSL:
+                    smtpObj = smtplib.SMTP_SSL(server, port)
+                else:
+                    smtpObj = smtplib.SMTP(server, port)
+                smtpObj.login(fromemail, password)
+                self.progressBar.setValue(6)
+                smtpObj.sendmail(fromemail, [toemail], message.as_string())
+                self.progressBar.setValue(10)
+                showQuickMessage(title='info', text="邮件发送完成",
+                                 icon=QMessageBox.Information, parent=self)
+                smtpObj.close()
             except:
-                showQuickMessage(title='error', 
-                    text=textwrap.dedent("""
+                showQuickMessage(title='error',
+                                 text=textwrap.dedent("""
                             邮件发送失败，请检查
                             1)网络是否连接。
                             2)邮箱账号密码是否输入正确
                             3)邮箱是否与服务器对应"""),
-                    icon=QMessageBox.Critical,
-                    parent=self)
+                                 icon=QMessageBox.Critical,
+                                 parent=self)
                 successFlag = False
+
 
         if successFlag:
             self.emailSentSignal.emit()
-        
+
         self.progressBar.reset()
 
     def subject(self):
@@ -142,10 +153,10 @@ class EmailReport(QWidget):
     def setInfo(self, info):
         self._info = str(info)
         self.infoText.setText(self._info)
-    
+
     def report(self):
         return self._report
-    
+
     def setReport(self, report):
         self._report = str(report)
         self.reportText.setText(self._report)
@@ -158,41 +169,47 @@ class EmailReport(QWidget):
 
     def showReport(self):
         self.setReportVisible(True)
-    
+
     def hideReport(self):
         self.setReportVisible(False)
-    
+
     def server(self):
         return self.emailWidget.server()
-    
+
     def setServer(self, server):
         self.emailWidget.setServer(server)
 
     def port(self):
         return self.emailWidget.port()
-    
+
     def setPort(self, port):
         self.emailWidget.setPort(port)
+    
+    def SSL(self):
+        return self.emailWidget.SSL()
+    
+    def setSSL(self, SSL):
+        self.emailWidget.setSSL(SSL)
 
     def fromemail(self):
         return self.emailWidget.email()
 
     def setFromemail(self, email):
         self.emailWidget.setEmail(email)
-    
+
     def toemail(self):
         return self._toemail
-    
+
     def setToemail(self, email):
         self._toemail = email
-    
+
     def password(self):
         return self.emailWidget.password()
-    
+
     def setPassword(self, password):
         self.emailWidget.setPassword(password)
 
-    
+
 if __name__ == '__main__':
     import sys
     from qtpy.QtWidgets import QApplication, QMainWindow
@@ -200,8 +217,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     window = QMainWindow()
-    
-    widget =  EmailReport()
+
+    widget = SecretEmail()
     widget.setInfo("""
     测试长文本!
     测试长文本
@@ -212,14 +229,14 @@ if __name__ == '__main__':
     """)
     widget.setToemail("baoxy@mail.ustc.edu.cn")
     widget.setServer("mail.ustc.edu.cn")
-    #widget.setFromemail("baoxy@mail.ustc.edu.cn")
+    # widget.setFromemail("baoxy@mail.ustc.edu.cn")
 
     widget.setReport("""
-    秘密文本
+    所需要发送的秘密文本
     """)
     widget.setReportVisible(True)
 
     window.setCentralWidget(widget)
     window.show()
-    
+
     sys.exit(app.exec())

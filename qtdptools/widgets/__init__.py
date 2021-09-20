@@ -1,2 +1,2 @@
-from .Email import *
+from .EmailServer import *
 from .EmailReport import *
